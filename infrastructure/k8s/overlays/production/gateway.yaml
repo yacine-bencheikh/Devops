@@ -1,236 +1,166 @@
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: auraweb-gateway
+  name: auraweb-ingress
   namespace: auraweb-prod
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-  gatewayClassName: eg
-  listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces:
-        from: Same
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: auraweb-routes
-  namespace: auraweb-prod
-spec:
-  parentRefs:
-  - name: auraweb-gateway
+  ingressClassName: traefik
   rules:
-  # Global Security Headers (Applied to all responses via repeats or specific policies, 
-  # here applied per rule for standard compliance)
-  
-  # User & Auth Service
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/auth
-    - path:
-        type: PathPrefix
-        value: /api/users
-    - path:
-        type: PathPrefix
-        value: /api/notifications
-    - path:
-        type: PathPrefix
-        value: /api/health
-    backendRefs:
-    - name: user-auth
-      port: 3000
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Catalog Service
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/products
-    - path:
-        type: PathPrefix
-        value: /api/categories
-    - path:
-        type: PathPrefix
-        value: /api/reviews
-    - path:
-        type: PathPrefix
-        value: /api/search
-    - path:
-        type: PathPrefix
-        value: /api/recommendations
-    backendRefs:
-    - name: catalog
-      port: 3001
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Order & Payment Service
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/orders
-    - path:
-        type: PathPrefix
-        value: /api/payments
-    backendRefs:
-    - name: order-payment
-      port: 3002
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Fulfillment Service
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/shipping
-    - path:
-        type: PathPrefix
-        value: /api/coupons
-    backendRefs:
-    - name: fulfillment
-      port: 3003
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Shopping Service
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/cart
-    - path:
-        type: PathPrefix
-        value: /api/wishlist
-    backendRefs:
-    - name: shopping
-      port: 3004
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Platform Service
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/analytics
-    - path:
-        type: PathPrefix
-        value: /api/files
-    - path:
-        type: PathPrefix
-        value: /api/reports
-    - path:
-        type: PathPrefix
-        value: /api/audit
-    backendRefs:
-    - name: platform
-      port: 3005
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Inventory Service
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/inventory
-    backendRefs:
-    - name: inventory
-      port: 3006
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Admin Panel
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /admin
-    backendRefs:
-    - name: admin
-      port: 80
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
-
-  # Frontend (Root Catch-all)
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: frontend
-      port: 80
-    filters:
-    - type: ResponseHeaderModifier
-      responseHeaderModifier:
-        add:
-        - name: X-Frame-Options
-          value: SAMEORIGIN
-        - name: X-XSS-Protection
-          value: "1; mode=block"
-        - name: X-Content-Type-Options
-          value: nosniff
+  - http:
+      paths:
+      - path: /api/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: user-auth
+            port:
+              number: 3000
+      - path: /api/users
+        pathType: Prefix
+        backend:
+          service:
+            name: user-auth
+            port:
+              number: 3000
+      - path: /api/notifications
+        pathType: Prefix
+        backend:
+          service:
+            name: user-auth
+            port:
+              number: 3000
+      - path: /api/health
+        pathType: Prefix
+        backend:
+          service:
+            name: user-auth
+            port:
+              number: 3000
+      - path: /api/products
+        pathType: Prefix
+        backend:
+          service:
+            name: catalog
+            port:
+              number: 3001
+      - path: /api/categories
+        pathType: Prefix
+        backend:
+          service:
+            name: catalog
+            port:
+              number: 3001
+      - path: /api/reviews
+        pathType: Prefix
+        backend:
+          service:
+            name: catalog
+            port:
+              number: 3001
+      - path: /api/search
+        pathType: Prefix
+        backend:
+          service:
+            name: catalog
+            port:
+              number: 3001
+      - path: /api/recommendations
+        pathType: Prefix
+        backend:
+          service:
+            name: catalog
+            port:
+              number: 3001
+      - path: /api/orders
+        pathType: Prefix
+        backend:
+          service:
+            name: order-payment
+            port:
+              number: 3002
+      - path: /api/payments
+        pathType: Prefix
+        backend:
+          service:
+            name: order-payment
+            port:
+              number: 3002
+      - path: /api/shipping
+        pathType: Prefix
+        backend:
+          service:
+            name: fulfillment
+            port:
+              number: 3003
+      - path: /api/coupons
+        pathType: Prefix
+        backend:
+          service:
+            name: fulfillment
+            port:
+              number: 3003
+      - path: /api/cart
+        pathType: Prefix
+        backend:
+          service:
+            name: shopping
+            port:
+              number: 3004
+      - path: /api/wishlist
+        pathType: Prefix
+        backend:
+          service:
+            name: shopping
+            port:
+              number: 3004
+      - path: /api/analytics
+        pathType: Prefix
+        backend:
+          service:
+            name: platform
+            port:
+              number: 3005
+      - path: /api/files
+        pathType: Prefix
+        backend:
+          service:
+            name: platform
+            port:
+              number: 3005
+      - path: /api/reports
+        pathType: Prefix
+        backend:
+          service:
+            name: platform
+            port:
+              number: 3005
+      - path: /api/audit
+        pathType: Prefix
+        backend:
+          service:
+            name: platform
+            port:
+              number: 3005
+      - path: /api/inventory
+        pathType: Prefix
+        backend:
+          service:
+            name: inventory
+            port:
+              number: 3006
+      - path: /admin
+        pathType: Prefix
+        backend:
+          service:
+            name: admin
+            port:
+              number: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80

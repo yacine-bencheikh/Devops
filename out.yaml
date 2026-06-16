@@ -1,0 +1,1038 @@
+apiVersion: v1
+data:
+  APP_SECRET: ZGV2c2VjcmV0
+  POSTGRES_PASSWORD: ZGV2cGFzc3dvcmQ=
+  RABBITMQ_DEFAULT_PASS: ZGV2cGFzc3dvcmQ=
+  REDIS_PASSWORD: ZGV2cGFzc3dvcmQ=
+kind: Secret
+metadata:
+  labels:
+    environment: production
+  name: app-secrets
+  namespace: auraweb-prod
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: admin
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: admin
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: catalog
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 3001
+    targetPort: 3001
+  selector:
+    app: catalog
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: frontend
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: frontend
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: fulfillment
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 3003
+    targetPort: 3003
+  selector:
+    app: fulfillment
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: inventory
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 3006
+    targetPort: 3006
+  selector:
+    app: inventory
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: order-payment
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 3002
+    targetPort: 3002
+  selector:
+    app: order-payment
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: platform
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 3005
+    targetPort: 3005
+  selector:
+    app: platform
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: postgres
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app: postgres
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: rabbitmq
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 5672
+  - port: 15672
+  selector:
+    app: rabbitmq
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: redis
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: redis
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: shopping
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 3004
+    targetPort: 3004
+  selector:
+    app: shopping
+    environment: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    environment: production
+  name: user-auth
+  namespace: auraweb-prod
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3000
+  selector:
+    app: user-auth
+    environment: production
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: admin
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: admin
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: admin
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: LOG_LEVEL
+          value: info
+        image: yassine09/lab-admin:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: admin
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: catalog
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalog
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: catalog
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3001"
+        - name: DB_HOST
+          value: postgres
+        - name: REDIS_HOST
+          value: redis
+        - name: RABBITMQ_URL
+          value: amqp://guest:guest@rabbitmq:5672
+        - name: ELASTICSEARCH_URL
+          value: http://elasticsearch:9200
+        - name: LOG_LEVEL
+          value: info
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        image: yassine09/lab-catalog:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: catalog
+        ports:
+        - containerPort: 3001
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: frontend
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: frontend
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: LOG_LEVEL
+          value: info
+        image: yassine09/lab-frontend:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: frontend
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: fulfillment
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fulfillment
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: fulfillment
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3003"
+        - name: DB_HOST
+          value: postgres
+        - name: REDIS_HOST
+          value: redis
+        - name: RABBITMQ_URL
+          value: amqp://guest:guest@rabbitmq:5672
+        - name: LOG_LEVEL
+          value: info
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        image: yassine09/lab-fulfillment:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: fulfillment
+        ports:
+        - containerPort: 3003
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: inventory
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: inventory
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3006"
+        - name: DB_HOST
+          value: postgres
+        - name: RABBITMQ_URL
+          value: amqp://guest:guest@rabbitmq:5672
+        - name: LOG_LEVEL
+          value: info
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        image: yassine09/lab-inventory:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3006
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: inventory
+        ports:
+        - containerPort: 3006
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3006
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: order-payment
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-payment
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: order-payment
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3002"
+        - name: DB_HOST
+          value: postgres
+        - name: RABBITMQ_URL
+          value: amqp://guest:guest@rabbitmq:5672
+        - name: LOG_LEVEL
+          value: info
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        image: yassine09/lab-order-payment:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: order-payment
+        ports:
+        - containerPort: 3002
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: platform
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: platform
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: platform
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3005"
+        - name: DB_HOST
+          value: postgres
+        - name: RABBITMQ_URL
+          value: amqp://guest:guest@rabbitmq:5672
+        - name: LOG_LEVEL
+          value: info
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        image: yassine09/lab-platform:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: platform
+        ports:
+        - containerPort: 3005
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: rabbitmq
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rabbitmq
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              key: RABBITMQ_USER
+              name: app-secrets
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              key: RABBITMQ_PASS
+              name: app-secrets
+        - name: LOG_LEVEL
+          value: info
+        image: rabbitmq:3-management-alpine
+        name: rabbitmq
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: redis
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: redis
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: redis
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: LOG_LEVEL
+          value: info
+        image: redis:7-alpine
+        name: redis
+        ports:
+        - containerPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: shopping
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shopping
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: shopping
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3004"
+        - name: DB_HOST
+          value: postgres
+        - name: REDIS_HOST
+          value: redis
+        - name: LOG_LEVEL
+          value: info
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        image: yassine09/lab-shopping:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: shopping
+        ports:
+        - containerPort: 3004
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3004
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    environment: production
+  name: user-auth
+  namespace: auraweb-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-auth
+      environment: production
+  template:
+    metadata:
+      labels:
+        app: user-auth
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3000"
+        - name: DB_HOST
+          value: postgres
+        - name: REDIS_HOST
+          value: redis
+        - name: RABBITMQ_URL
+          value: amqp://guest:guest@rabbitmq:5672
+        - name: LOG_LEVEL
+          value: info
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        image: yassine09/lab-auth:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: user-auth
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    environment: production
+  name: postgres
+  namespace: auraweb-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      environment: production
+  serviceName: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        environment: production
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              key: DB_NAME
+              name: app-secrets
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: DB_USER
+              name: app-secrets
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: DB_PASSWORD
+              name: app-secrets
+        image: postgres:16-alpine
+        name: postgres
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-data
+  volumeClaimTemplates:
+  - metadata:
+      labels:
+        environment: production
+      name: postgres-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  labels:
+    environment: production
+  name: auraweb-gateway
+  namespace: auraweb-prod
+spec:
+  gatewayClassName: eg
+  listeners:
+  - allowedRoutes:
+      namespaces:
+        from: Same
+    name: http
+    port: 80
+    protocol: HTTP
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    environment: production
+  name: auraweb-routes
+  namespace: auraweb-prod
+spec:
+  parentRefs:
+  - name: auraweb-gateway
+  rules:
+  - backendRefs:
+    - name: user-auth
+      port: 3000
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /api/auth
+    - path:
+        type: PathPrefix
+        value: /api/users
+    - path:
+        type: PathPrefix
+        value: /api/notifications
+    - path:
+        type: PathPrefix
+        value: /api/health
+  - backendRefs:
+    - name: catalog
+      port: 3001
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /api/products
+    - path:
+        type: PathPrefix
+        value: /api/categories
+    - path:
+        type: PathPrefix
+        value: /api/reviews
+    - path:
+        type: PathPrefix
+        value: /api/search
+    - path:
+        type: PathPrefix
+        value: /api/recommendations
+  - backendRefs:
+    - name: order-payment
+      port: 3002
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /api/orders
+    - path:
+        type: PathPrefix
+        value: /api/payments
+  - backendRefs:
+    - name: fulfillment
+      port: 3003
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /api/shipping
+    - path:
+        type: PathPrefix
+        value: /api/coupons
+  - backendRefs:
+    - name: shopping
+      port: 3004
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /api/cart
+    - path:
+        type: PathPrefix
+        value: /api/wishlist
+  - backendRefs:
+    - name: platform
+      port: 3005
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /api/analytics
+    - path:
+        type: PathPrefix
+        value: /api/files
+    - path:
+        type: PathPrefix
+        value: /api/reports
+    - path:
+        type: PathPrefix
+        value: /api/audit
+  - backendRefs:
+    - name: inventory
+      port: 3006
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /api/inventory
+  - backendRefs:
+    - name: admin
+      port: 80
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /admin
+  - backendRefs:
+    - name: frontend
+      port: 80
+    filters:
+    - responseHeaderModifier:
+        add:
+        - name: X-Frame-Options
+          value: SAMEORIGIN
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: X-Content-Type-Options
+          value: nosniff
+      type: ResponseHeaderModifier
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
