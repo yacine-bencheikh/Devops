@@ -52,8 +52,8 @@ The application follows a microservices architecture with clear separation of co
 ### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/devopsexpertlearning/docker-nginx-react-kubernetes-fullstack.git
-cd docker-nginx-react-kubernetes-fullstack
+git clone https://github.com/yacine-bencheikh/Devops.git
+cd Devops
 ```
 
 ### 2. Environment Configuration
@@ -447,7 +447,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/devopsexpertlearning/docker-nginx-react-kubernetes-fullstack
+    repoURL: https://github.com/yacine-bencheikh/Devops.git
     targetRevision: main
     path: k8s/overlays/production
   destination:

@@ -9,9 +9,9 @@ spec:
   project: default
   
   source:
-    repoURL: https://github.com/your-org/docker-nginx-react-frontend-admin.git
+    repoURL: https://github.com/yacine-bencheikh/Devops.git
     targetRevision: develop
-    path: k8s/overlays/development
+    path: infrastructure/k8s/overlays/development
   
   destination:
     server: https://kubernetes.default.svc
@@ -52,9 +52,9 @@ spec:
   project: default
   
   source:
-    repoURL: https://github.com/your-org/docker-nginx-react-frontend-admin.git
+    repoURL: https://github.com/yacine-bencheikh/Devops.git
     targetRevision: main
-    path: k8s/overlays/production
+    path: infrastructure/k8s/overlays/production
   
   destination:
     server: https://kubernetes.default.svc

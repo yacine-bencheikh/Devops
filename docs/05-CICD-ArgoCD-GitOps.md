@@ -53,7 +53,7 @@ kubectl apply -f argocd/applications.yaml
 ```yaml
 name: auraweb-staging
 source:
-  repoURL: https://github.com/your-org/your-repo.git
+  repoURL: https://github.com/yacine-bencheikh/Devops.git
   targetRevision: develop
   path: k8s/overlays/development
 destination:
@@ -160,7 +160,7 @@ argocd app rollback auraweb-production
 
 **CLI**:
 ```bash
-argocd repo add https://github.com/your-org/your-repo.git \
+argocd repo add https://github.com/yacine-bencheikh/Devops.git \
   --username your-username \
   --password your-token
 ```
