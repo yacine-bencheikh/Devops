@@ -40,11 +40,14 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:latest
 
+      - name: Install kustomize
+        run: |
+          curl -Lo /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz
+          tar -xzf /tmp/kustomize.tar.gz -C /tmp/
+          sudo mv /tmp/kustomize /usr/local/bin/kustomize
+
       - name: Update image tags in k8s manifests
         run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
-
           cd infrastructure/k8s/overlays/production
           kustomize edit set image frontend=yassine09/lab-frontend:${{ github.sha }}
           kustomize edit set image user-auth=yassine09/lab-auth:${{ github.sha }}
