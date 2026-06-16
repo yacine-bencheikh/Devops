@@ -1,18 +1,23 @@
+---
 name: CI-CD
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch: {}
+    branches:
+      - main
+
+  workflow_dispatch: true
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -28,8 +33,8 @@ jobs:
           context: services/frontend
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:latest
+            yassine09/lab-frontend:${{ github.sha }}
+            yassine09/lab-frontend:latest
 
       - name: Build and push auth backend
         uses: docker/build-push-action@v6
@@ -37,29 +42,43 @@ jobs:
           context: services/user-auth
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:latest
+            yassine09/lab-auth:${{ github.sha }}
+            yassine09/lab-auth:latest
 
       - name: Install kustomize
         run: |
-          curl -Lo /tmp/kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz
+          curl -Lo /tmp/kustomize.tar.gz \
+            https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz
+
           tar -xzf /tmp/kustomize.tar.gz -C /tmp/
           sudo mv /tmp/kustomize /usr/local/bin/kustomize
 
       - name: Update image tags in k8s manifests
         run: |
           cd infrastructure/k8s/overlays/production
-          kustomize edit set image frontend=yassine09/lab-frontend:${{ github.sha }}
-          kustomize edit set image user-auth=yassine09/lab-auth:${{ github.sha }}
+
+          kustomize edit set image \
+            yassine09/lab-frontend=yassine09/lab-frontend:${{ github.sha }}
+
+          kustomize edit set image \
+            yassine09/lab-auth=yassine09/lab-auth:${{ github.sha }}
 
           cd ../development
-          kustomize edit set image frontend=yassine09/lab-frontend:${{ github.sha }}
-          kustomize edit set image user-auth=yassine09/lab-auth:${{ github.sha }}
+
+          kustomize edit set image \
+            yassine09/lab-frontend=yassine09/lab-frontend:${{ github.sha }}
+
+          kustomize edit set image \
+            yassine09/lab-auth=yassine09/lab-auth:${{ github.sha }}
 
       - name: Commit and push manifest updates
         run: |
           git config user.email "ci@github.com"
           git config user.name "GitHub Actions"
+
           git add infrastructure/k8s/overlays/
-          git commit -m "ci: deploy ${{ github.sha }}"
+
+          git diff --cached --quiet || \
+            git commit -m "ci: deploy ${{ github.sha }}"
+
           git push
