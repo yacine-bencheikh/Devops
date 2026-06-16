@@ -20,7 +20,7 @@ function About() {
             <div className="about-hero glass-card">
                 <h1>About AuraWeb</h1>
                 <p className="hero-subtitle">
-                    Building the future of web development, one innovation at a time
+                   Yaaaaay Building the future of web development, one innovation at a time
                 </p>
             </div>
 
