@@ -36,7 +36,9 @@ metadata:
   name: rabbitmq
 spec:
   ports:
-  - port: 5672
-  - port: 15672
+  - name: amqp
+    port: 5672
+  - name: management
+    port: 15672
   selector:
     app: rabbitmq
