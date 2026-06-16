@@ -16,6 +16,8 @@ kind: Service
 metadata:
   name: auth-backend
   namespace: lab
+  labels:
+    app: auth-backend
 spec:
   selector:
     app: auth-backend

@@ -15,7 +15,7 @@ const registerHandler = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const result = await pool.query(
-            'INSERT INTO users (email, password_hash, name, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, email, name',
+            'INSERT INTO users (email, password_hash, first_name, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, email, first_name AS name',
             [email, hashedPassword, name]
         );
 

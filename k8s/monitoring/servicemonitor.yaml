@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: lab-app-metrics
+  namespace: monitoring
+  labels:
+    release: kube-prom
+spec:
+  selector:
+    matchLabels:
+      app: auth-backend
+  namespaceSelector:
+    matchNames:
+      - lab
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
