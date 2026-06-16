@@ -12,7 +12,7 @@ build/
 *.local
 
 # Environment files
-.env
+
 .env.local
 # Allow template files but block actual environment files
 !.env.development
