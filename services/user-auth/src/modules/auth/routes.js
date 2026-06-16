@@ -21,14 +21,21 @@ const registerHandler = async (req, res) => {
 
         const user = result.rows[0];
 
-        // Publish Event
-        const channel = getChannel();
-        if (channel) {
-            channel.sendToQueue('USER_CREATED', Buffer.from(JSON.stringify(user)));
+        // Publish Event — non-critical, must not fail the registration
+        try {
+            const channel = getChannel();
+            if (channel) {
+                channel.sendToQueue('USER_CREATED', Buffer.from(JSON.stringify(user)));
+            }
+        } catch (mqErr) {
+            logger.warn('Failed to publish USER_CREATED event', { error: mqErr.message });
         }
 
         res.status(201).json(user);
     } catch (err) {
+        if (err.code === '23505') {
+            return res.status(409).json({ error: 'Email already in use' });
+        }
         logger.error('Error registering user', err);
         res.status(500).json({ error: 'Registration failed' });
     }

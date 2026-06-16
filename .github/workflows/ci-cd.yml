@@ -136,7 +136,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure namespace and secrets exist
+      - name: Ensure namespaces exist
+        run: |
+          kubectl create namespace auraweb-prod --dry-run=client -o yaml | kubectl apply --validate=false -f -
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply --validate=false -f -
+
+      - name: Ensure secrets exist
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -162,6 +167,56 @@ jobs:
         run: |
           kubectl apply --validate=false -k infrastructure/k8s/overlays/production/
           kubectl apply --validate=false -f k8s/monitoring/
+
+      - name: Initialize postgres schema if needed
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: |
+          DB_USER="${DB_USER:-auraweb_user}"
+          DB_NAME="${DB_NAME:-auraweb_db}"
+
+          HAS_COL=$(kubectl exec -n auraweb-prod postgres-0 -- \
+            psql -U "$DB_USER" -d "$DB_NAME" -tAc \
+            "SELECT COUNT(*) FROM information_schema.columns
+             WHERE table_name='users' AND column_name='password_hash';" 2>/dev/null || echo "0")
+
+          if [ "$HAS_COL" != "1" ]; then
+            echo "Schema missing — initializing database..."
+            kubectl exec -n auraweb-prod postgres-0 -- \
+              psql -U "$DB_USER" -d "$DB_NAME" -c "
+          DROP TABLE IF EXISTS notifications CASCADE;
+          DROP TABLE IF EXISTS users CASCADE;
+          CREATE TABLE users (
+              id SERIAL PRIMARY KEY,
+              email VARCHAR(255) UNIQUE NOT NULL,
+              password_hash VARCHAR(255) NOT NULL,
+              first_name VARCHAR(100),
+              last_name VARCHAR(100),
+              role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user','admin','editor')),
+              is_active BOOLEAN DEFAULT true,
+              email_verified BOOLEAN DEFAULT false,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              last_login TIMESTAMP
+          );
+          CREATE TABLE notifications (
+              id SERIAL PRIMARY KEY,
+              user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+              title VARCHAR(255) NOT NULL,
+              message TEXT NOT NULL,
+              type VARCHAR(50) DEFAULT 'info',
+              is_read BOOLEAN DEFAULT FALSE,
+              created_at TIMESTAMP DEFAULT NOW()
+          );
+          CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+          GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $DB_USER;
+          GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $DB_USER;
+          "
+            echo "Schema initialized."
+          else
+            echo "Schema already correct — skipping init."
+          fi
 
       - name: Update image tags in deployments
         env:
