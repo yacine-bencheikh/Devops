@@ -19,8 +19,13 @@ secretGenerator:
   - name: app-secrets
     literals:
       - APP_SECRET=devsecret
+      - DB_NAME=auraweb_db
+      - DB_USER=auraweb_user
+      - DB_PASSWORD=devpassword
       - POSTGRES_PASSWORD=devpassword
       - REDIS_PASSWORD=devpassword
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=devpassword
       - RABBITMQ_DEFAULT_PASS=devpassword
 
 generatorOptions:
