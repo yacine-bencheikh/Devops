@@ -9,7 +9,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Scan for secrets in code (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan dependencies for vulnerabilities
+        working-directory: services/user-auth
+        run: npm audit --audit-level=high
+
   build-and-push:
+    needs: security-scan
     runs-on: ubuntu-latest
 
     permissions:
@@ -30,7 +46,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push frontend
+      - name: Build frontend image (local, for scanning)
+        uses: docker/build-push-action@v6
+        with:
+          context: services/frontend
+          push: false
+          load: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }}
+
+      - name: Scan frontend image for CVEs (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL
+
+      - name: Push frontend image
         uses: docker/build-push-action@v6
         with:
           context: services/frontend
@@ -39,7 +71,23 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:latest
 
-      - name: Build and push auth backend
+      - name: Build auth image (local, for scanning)
+        uses: docker/build-push-action@v6
+        with:
+          context: services/user-auth
+          push: false
+          load: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }}
+
+      - name: Scan auth image for CVEs (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL
+
+      - name: Push auth image
         uses: docker/build-push-action@v6
         with:
           context: services/user-auth
@@ -110,7 +158,7 @@ jobs:
 
       - name: Apply k8s manifests
         run: |
-          kubectl apply --validate=false -f infrastructure/k8s/overlays/production/
+          kubectl apply --validate=false -k infrastructure/k8s/overlays/production/
           kubectl apply --validate=false -f k8s/monitoring/
 
       - name: Update image tags in deployments
