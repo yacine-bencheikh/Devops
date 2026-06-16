@@ -7,7 +7,6 @@ resources:
   - rabbitmq-deployment.yaml
   - frontend-deployment.yaml
   - admin-deployment.yaml
-
   - catalog-deployment.yaml
   - inventory-deployment.yaml
   - shopping-deployment.yaml
@@ -18,6 +17,11 @@ resources:
 
 secretGenerator:
   - name: app-secrets
-    envs:
-      - ../../../.env
-    type: Opaque
+    literals:
+      - APP_SECRET=devsecret
+      - POSTGRES_PASSWORD=devpassword
+      - REDIS_PASSWORD=devpassword
+      - RABBITMQ_DEFAULT_PASS=devpassword
+
+generatorOptions:
+  disableNameSuffixHash: true
