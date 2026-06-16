@@ -2,8 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../base
-  - gateway.yaml
+- ../../base
+- gateway.yaml
 
 namespace: auraweb-dev
 
@@ -13,9 +13,9 @@ commonLabels:
   environment: development
 
 images:
-  - name: frontend
-    newName: yassine09/lab-frontend
-    newTag: latest
-  - name: user-auth
-    newName: yassine09/lab-auth
-    newTag: latest
+- name: frontend
+  newName: yassine09/lab-frontend
+  newTag: cc0b3864aad3617047b486f77e8dc5c918a0cab6
+- name: user-auth
+  newName: yassine09/lab-auth
+  newTag: cc0b3864aad3617047b486f77e8dc5c918a0cab6
