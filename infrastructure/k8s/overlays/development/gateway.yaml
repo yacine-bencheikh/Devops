@@ -20,7 +20,7 @@ metadata:
   namespace: auraweb-dev
 spec:
   parentRefs:
-  - name: auraweb-gateway
+  - name: dev-auraweb-gateway
   rules:
   # User & Auth Service
   - matches:

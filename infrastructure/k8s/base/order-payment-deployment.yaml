@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: order-payment
-        image: order-payment:latest
+        image: yassine09/lab-order-payment:latest
         imagePullPolicy: IfNotPresent
         resources:
           requests:

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: catalog
-        image: catalog:latest
+        image: yassine09/lab-catalog:latest
         imagePullPolicy: IfNotPresent
         resources:
           requests:

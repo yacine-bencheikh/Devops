@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: shopping
-        image: shopping:latest
+        image: yassine09/lab-shopping:latest
         imagePullPolicy: IfNotPresent
         resources:
           requests:

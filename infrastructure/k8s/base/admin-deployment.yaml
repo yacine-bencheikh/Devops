@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: admin
-        image: admin:latest
+        image: yassine09/lab-admin:latest
         imagePullPolicy: IfNotPresent
         env: []
         resources:

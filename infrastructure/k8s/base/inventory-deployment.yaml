@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: inventory
-        image: inventory:latest
+        image: yassine09/lab-inventory:latest
         imagePullPolicy: IfNotPresent
         resources:
           requests:

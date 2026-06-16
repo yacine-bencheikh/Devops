@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: fulfillment
-        image: fulfillment:latest
+        image: yassine09/lab-fulfillment:latest
         imagePullPolicy: IfNotPresent
         resources:
           requests:
