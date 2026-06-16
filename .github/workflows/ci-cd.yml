@@ -2,11 +2,9 @@
 name: CI-CD
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'services/frontend/**'
-      - 'services/user-auth/**'
+  push: {}
+  pull_request: {}
+  workflow_dispatch: {}
 
 jobs:
   build-and-push:
