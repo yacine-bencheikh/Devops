@@ -1,0 +1,48 @@
+
+name: CI-CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/frontend/**'
+      - 'services/user-auth/**'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: services/frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }},${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:latest
+
+      - name: Build and push auth backend
+        uses: docker/build-push-action@v6
+        with:
+          context: services/user-auth
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }},${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to k3d cluster
+        run: |
+          kubectl set image deployment/frontend frontend=${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }} -n lab
+          kubectl set image deployment/auth-backend auth-backend=${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }} -n lab
+          kubectl rollout status deployment/frontend -n lab --timeout=120s
+          kubectl rollout status deployment/auth-backend -n lab --timeout=120s
