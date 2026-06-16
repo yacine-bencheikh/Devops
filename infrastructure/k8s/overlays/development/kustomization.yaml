@@ -15,7 +15,7 @@ commonLabels:
 images:
 - name: frontend
   newName: yassine09/lab-frontend
-  newTag: b00641865075d77d99a4c265fb0f87f2dc91da26
+  newTag: 06771c0ca16503b3f438077b0c7534c17f3edf0e
 - name: user-auth
   newName: yassine09/lab-auth
-  newTag: b00641865075d77d99a4c265fb0f87f2dc91da26
+  newTag: 06771c0ca16503b3f438077b0c7534c17f3edf0e
