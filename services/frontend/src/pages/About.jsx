@@ -11,7 +11,7 @@ function About() {
     const stats = [
         { value: '10K+', label: 'Active Users' },
         { value: '99.9%', label: 'Uptime' },
-        { value: '24/7', label: 'Support' },
+        { value: '24/8', label: 'Support' },
         { value: '50+', label: 'Countries' }
     ];
 
