@@ -3,10 +3,8 @@ kind: Ingress
 metadata:
   name: auraweb-ingress
   namespace: auraweb-dev
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-  ingressClassName: traefik
+  ingressClassName: nginx
   rules:
   - http:
       paths:
