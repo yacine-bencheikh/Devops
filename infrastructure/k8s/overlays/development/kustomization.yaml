@@ -9,7 +9,7 @@ namespace: auraweb-dev
 
 namePrefix: dev-
 
-commonLabels:
+labels:
   environment: development
 
 images:

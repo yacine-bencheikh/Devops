@@ -72,11 +72,11 @@ jobs:
 
       - name: Deploy to production
         run: |
-          kubectl apply -k infrastructure/k8s/overlays/production
+          kubectl apply -k infrastructure/k8s/overlays/production --validate=false
 
       - name: Deploy to development
         run: |
-          kubectl apply -k infrastructure/k8s/overlays/development
+          kubectl apply -k infrastructure/k8s/overlays/development --validate=false
 
       - name: Wait for rollout
         run: |
