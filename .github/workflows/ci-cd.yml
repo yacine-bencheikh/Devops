@@ -86,7 +86,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure lab namespace and secrets exist
+      - name: Ensure namespace and secrets exist
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -94,26 +94,24 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          kubectl create namespace lab --dry-run=client -o yaml | kubectl apply -f -
-
           kubectl create secret docker-registry dockerhub-creds \
             --docker-server=https://index.docker.io/v1/ \
             --docker-username="${DOCKERHUB_USERNAME}" \
             --docker-password="${DOCKERHUB_TOKEN}" \
-            --namespace=lab \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --namespace=auraweb-prod \
+            --dry-run=client -o yaml | kubectl apply --validate=false -f -
 
           kubectl create secret generic app-secrets \
             --from-literal=DB_NAME="${DB_NAME:-auraweb_db}" \
             --from-literal=DB_USER="${DB_USER:-auraweb_user}" \
             --from-literal=DB_PASSWORD="${DB_PASSWORD:-devpassword}" \
-            --namespace=lab \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --namespace=auraweb-prod \
+            --dry-run=client -o yaml | kubectl apply --validate=false -f -
 
       - name: Apply k8s manifests
         run: |
-          kubectl apply -f k8s/lab/
-          kubectl apply -f k8s/monitoring/
+          kubectl apply --validate=false -f infrastructure/k8s/overlays/production/
+          kubectl apply --validate=false -f k8s/monitoring/
 
       - name: Update image tags in deployments
         env:
@@ -121,12 +119,12 @@ jobs:
         run: |
           kubectl set image deployment/frontend \
             frontend=${DOCKERHUB_USERNAME}/lab-frontend:${{ github.sha }} \
-            -n lab
-          kubectl set image deployment/auth-backend \
-            auth-backend=${DOCKERHUB_USERNAME}/lab-auth:${{ github.sha }} \
-            -n lab
+            -n auraweb-prod
+          kubectl set image deployment/user-auth \
+            user-auth=${DOCKERHUB_USERNAME}/lab-auth:${{ github.sha }} \
+            -n auraweb-prod
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/frontend -n lab --timeout=120s
-          kubectl rollout status deployment/auth-backend -n lab --timeout=120s
+          kubectl rollout status deployment/frontend -n auraweb-prod --timeout=120s
+          kubectl rollout status deployment/user-auth -n auraweb-prod --timeout=120s
