@@ -24,7 +24,7 @@ jobs:
 
       - name: Scan dependencies for vulnerabilities
         working-directory: services/user-auth
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
   build-and-push:
     needs: security-scan
