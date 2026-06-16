@@ -18,6 +18,9 @@ RUN npm ci --only=production && \
 # ==========================================
 FROM node:22-alpine
 
+# Upgrade all Alpine packages to pick up security patches (CVE-2026-31789 openssl)
+RUN apk upgrade --no-cache
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001

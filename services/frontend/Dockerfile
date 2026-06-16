@@ -21,6 +21,9 @@ RUN npm run build
 # Uses Nginx 1.28 Alpine for serving static files with minimal footprint
 FROM nginx:1.28-alpine
 
+# Upgrade all Alpine packages to pick up security patches (CVE-2026-31789 openssl)
+RUN apk upgrade --no-cache
+
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
