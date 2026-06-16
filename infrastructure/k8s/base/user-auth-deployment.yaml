@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: user-auth
-        image: user-auth:latest
+        image: yassine09/lab-auth:latest
         imagePullPolicy: IfNotPresent
         resources:
           requests:

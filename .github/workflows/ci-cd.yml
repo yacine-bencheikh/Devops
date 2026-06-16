@@ -1,14 +1,14 @@
-
 name: CI-CD
 
 on:
-  push: {}
-  pull_request: {}
+  push:
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,24 +23,15 @@ jobs:
         with:
           context: services/frontend
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }},${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:latest
 
       - name: Build and push auth backend
         uses: docker/build-push-action@v6
         with:
           context: services/user-auth
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }},${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:latest
-
-  deploy:
-    needs: build-and-push
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to k3d cluster
-        run: |
-          kubectl set image deployment/frontend frontend=${{ secrets.DOCKERHUB_USERNAME }}/lab-frontend:${{ github.sha }} -n lab
-          kubectl set image deployment/auth-backend auth-backend=${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }} -n lab
-          kubectl rollout status deployment/frontend -n lab --timeout=120s
-          kubectl rollout status deployment/auth-backend -n lab --timeout=120s
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:latest

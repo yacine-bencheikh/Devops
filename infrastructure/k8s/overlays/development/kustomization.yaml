@@ -12,6 +12,14 @@ namePrefix: dev-
 commonLabels:
   environment: development
 
+images:
+  - name: frontend
+    newName: yassine09/lab-frontend
+    newTag: latest
+  - name: user-auth
+    newName: yassine09/lab-auth
+    newTag: latest
+
 patches:
   - target:
       kind: Deployment
