@@ -15,7 +15,7 @@ spec:
       containers:
       - name: user-auth
         image: yassine09/lab-auth:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         resources:
           requests:
             memory: "128Mi"

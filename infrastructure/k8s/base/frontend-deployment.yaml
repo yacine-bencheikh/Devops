@@ -15,7 +15,7 @@ spec:
       containers:
       - name: frontend
         image: yassine09/lab-frontend:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env: []
         resources:
           requests:
