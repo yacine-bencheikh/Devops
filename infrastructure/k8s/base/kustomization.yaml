@@ -19,5 +19,5 @@ resources:
 secretGenerator:
   - name: app-secrets
     envs:
-      - .env
+      - ../../../.env
     type: Opaque
