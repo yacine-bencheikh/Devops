@@ -6,27 +6,17 @@ resources:
   - redis-deployment.yaml
   - rabbitmq-deployment.yaml
   - frontend-deployment.yaml
-  - admin-deployment.yaml
-  - catalog-deployment.yaml
-  - inventory-deployment.yaml
-  - shopping-deployment.yaml
-  - order-payment-deployment.yaml
-  - fulfillment-deployment.yaml
   - user-auth-deployment.yaml
-  - platform-deployment.yaml
 
 secretGenerator:
   - name: app-secrets
     literals:
-      - APP_SECRET=devsecret
       - DB_NAME=auraweb_db
       - DB_USER=auraweb_user
       - DB_PASSWORD=devpassword
-      - POSTGRES_PASSWORD=devpassword
       - REDIS_PASSWORD=devpassword
       - RABBITMQ_USER=guest
-      - RABBITMQ_PASS=devpassword
-      - RABBITMQ_DEFAULT_PASS=devpassword
+      - RABBITMQ_PASS=guest
 
 generatorOptions:
   disableNameSuffixHash: true

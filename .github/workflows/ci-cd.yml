@@ -3,6 +3,8 @@ name: CI-CD
 on:
   push:
     branches: [main]
+    paths:
+      - 'services/**'
   workflow_dispatch: {}
 
 jobs:
@@ -35,3 +37,24 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-auth:latest
+
+      - name: Update image tags in k8s manifests
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+          cd infrastructure/k8s/overlays/production
+          kustomize edit set image frontend=yassine09/lab-frontend:${{ github.sha }}
+          kustomize edit set image user-auth=yassine09/lab-auth:${{ github.sha }}
+
+          cd ../development
+          kustomize edit set image frontend=yassine09/lab-frontend:${{ github.sha }}
+          kustomize edit set image user-auth=yassine09/lab-auth:${{ github.sha }}
+
+      - name: Commit and push manifest updates
+        run: |
+          git config user.email "ci@github.com"
+          git config user.name "GitHub Actions"
+          git add infrastructure/k8s/overlays/
+          git commit -m "ci: deploy ${{ github.sha }}"
+          git push

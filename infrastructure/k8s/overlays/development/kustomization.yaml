@@ -19,13 +19,3 @@ images:
   - name: user-auth
     newName: yassine09/lab-auth
     newTag: latest
-
-patches:
-  - target:
-      kind: Deployment
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: LOG_LEVEL
-          value: debug
