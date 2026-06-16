@@ -20,7 +20,7 @@ metadata:
   namespace: auraweb-dev
 spec:
   parentRefs:
-  - name: dev-auraweb-gateway
+  - name: auraweb-gateway
   rules:
   # User & Auth Service
   - matches:
@@ -37,7 +37,7 @@ spec:
         type: PathPrefix
         value: /api/health
     backendRefs:
-    - name: user-auth
+    - name: dev-user-auth
       port: 3000
     filters:
     - type: ResponseHeaderModifier
@@ -68,7 +68,7 @@ spec:
         type: PathPrefix
         value: /api/recommendations
     backendRefs:
-    - name: catalog
+    - name: dev-catalog
       port: 3001
     filters:
     - type: ResponseHeaderModifier
@@ -90,7 +90,7 @@ spec:
         type: PathPrefix
         value: /api/payments
     backendRefs:
-    - name: order-payment
+    - name: dev-order-payment
       port: 3002
     filters:
     - type: ResponseHeaderModifier
@@ -112,7 +112,7 @@ spec:
         type: PathPrefix
         value: /api/coupons
     backendRefs:
-    - name: fulfillment
+    - name: dev-fulfillment
       port: 3003
     filters:
     - type: ResponseHeaderModifier
@@ -134,7 +134,7 @@ spec:
         type: PathPrefix
         value: /api/wishlist
     backendRefs:
-    - name: shopping
+    - name: dev-shopping
       port: 3004
     filters:
     - type: ResponseHeaderModifier
@@ -162,7 +162,7 @@ spec:
         type: PathPrefix
         value: /api/audit
     backendRefs:
-    - name: platform
+    - name: dev-platform
       port: 3005
     filters:
     - type: ResponseHeaderModifier
@@ -181,7 +181,7 @@ spec:
         type: PathPrefix
         value: /api/inventory
     backendRefs:
-    - name: inventory
+    - name: dev-inventory
       port: 3006
     filters:
     - type: ResponseHeaderModifier
@@ -200,7 +200,7 @@ spec:
         type: PathPrefix
         value: /admin
     backendRefs:
-    - name: admin
+    - name: dev-admin
       port: 80
     filters:
     - type: ResponseHeaderModifier
@@ -219,7 +219,7 @@ spec:
         type: PathPrefix
         value: /
     backendRefs:
-    - name: frontend
+    - name: dev-frontend
       port: 80
     filters:
     - type: ResponseHeaderModifier
