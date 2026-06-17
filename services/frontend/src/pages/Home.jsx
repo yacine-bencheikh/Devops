@@ -19,7 +19,7 @@ function Home() {
                 <div>
                     <h1>The Future of<br />Web Development</h1>
                     <p>
-                        Experience the next generation of digital solutions.
+                        Experience the nexttt generation of digital solutions.
                         Built with React, deployed with Docker, and served with Nginx.
                     </p>
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-start' }}>
