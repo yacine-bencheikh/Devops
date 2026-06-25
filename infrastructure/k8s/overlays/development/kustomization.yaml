@@ -21,7 +21,7 @@ images:
   newTag: 943c74904d2c94771a4a594daef3f622a7f0d9fe
 - name: yassine09/lab-auth
   newName: yassine09/lab-auth
-  newTag: c9dcd9b38e447521f5e204ce8bab3ae082ca9da3
+  newTag: 74b5ddb8da42537644cd640a3a4efddb9e9c46e9
 - name: yassine09/lab-frontend
   newName: yassine09/lab-frontend
-  newTag: c9dcd9b38e447521f5e204ce8bab3ae082ca9da3
+  newTag: 74b5ddb8da42537644cd640a3a4efddb9e9c46e9
