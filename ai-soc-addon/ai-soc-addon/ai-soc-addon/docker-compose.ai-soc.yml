@@ -19,19 +19,19 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       # Point this at the real user-auth NodePort on the VM.
       # Find it with: kubectl get svc user-auth -n auraweb-prod
-      - METRICS_URL=${METRICS_URL:-http://192.168.145.140:3000/metrics}
+      - METRICS_URL=${METRICS_URL:-http://192.168.145.140:30300/metrics}
     restart: unless-stopped
 
   traffic-generator:
     build: ./traffic-generator
     container_name: traffic-generator
     environment:
-      - USER_AUTH_URL=${USER_AUTH_URL:-http://192.168.145.140:3000}
+      - USER_AUTH_URL=${USER_AUTH_URL:-http://192.168.145.140:30300}
     restart: unless-stopped
 
   attack-simulator:
     build: ./attack-simulator
     container_name: attack-simulator
     environment:
-      - USER_AUTH_URL=${USER_AUTH_URL:-http://192.168.145.140:3000}
+      - USER_AUTH_URL=${USER_AUTH_URL:-http://192.168.145.140:30300}
     restart: "no"
