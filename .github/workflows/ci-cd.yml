@@ -234,29 +234,6 @@ jobs:
           kubectl rollout status deployment/frontend -n auraweb-prod --timeout=120s
           kubectl rollout status deployment/user-auth -n auraweb-prod --timeout=120s
 
-      - name: Setup port-forward as persistent systemd user service
-        run: |
-          mkdir -p ~/.config/systemd/user
-          cat > ~/.config/systemd/user/user-auth-pf.service << 'UNIT'
-          [Unit]
-          Description=kubectl port-forward user-auth (SOC addon)
-          After=default.target
-
-          [Service]
-          Environment="KUBECONFIG=/home/yassine/.kube/config"
-          ExecStart=/usr/local/bin/kubectl port-forward svc/user-auth 30300:3000 -n auraweb-prod --address 0.0.0.0
-          Restart=always
-          RestartSec=10
-
-          [Install]
-          WantedBy=default.target
-          UNIT
-          systemctl --user daemon-reload
-          systemctl --user enable user-auth-pf
-          systemctl --user restart user-auth-pf
-          sleep 4
-          systemctl --user status user-auth-pf
-
       - name: Deploy AI SOC addon
         run: |
           cd $GITHUB_WORKSPACE/ai-soc-addon/ai-soc-addon/ai-soc-addon
