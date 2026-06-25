@@ -1,10 +1,6 @@
 # ==========================================
 # Add-on : Mini SOC avec détection d'anomalies par IA (v3 - dashboard complet)
-# Usage (depuis la racine du projet Devops-main, à côté de docker-compose.yml) :
-#
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.ai-soc.yml up -d --build
-#
-# Dashboard accessible sur : http://localhost:8500  (login: admin / admin)
+# Dashboard accessible sur : http://<VM-IP>:8500  (login: admin / admin)
 # ==========================================
 
 services:
@@ -13,25 +9,29 @@ services:
     container_name: ai-anomaly-detector
     ports:
       - "8500:8500"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - ADMIN_USER=admin
       - ADMIN_PASS=admin
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      # Point this at the real user-auth NodePort on the VM.
-      # Find it with: kubectl get svc user-auth -n auraweb-prod
-      - METRICS_URL=${METRICS_URL:-http://192.168.145.140:30300/metrics}
+      - METRICS_URL=${METRICS_URL:-http://host.docker.internal:30300/metrics}
     restart: unless-stopped
 
   traffic-generator:
     build: ./traffic-generator
     container_name: traffic-generator
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      - USER_AUTH_URL=${USER_AUTH_URL:-http://192.168.145.140:30300}
+      - USER_AUTH_URL=${USER_AUTH_URL:-http://host.docker.internal:30300}
     restart: unless-stopped
 
   attack-simulator:
     build: ./attack-simulator
     container_name: attack-simulator
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      - USER_AUTH_URL=${USER_AUTH_URL:-http://192.168.145.140:30300}
+      - USER_AUTH_URL=${USER_AUTH_URL:-http://host.docker.internal:30300}
     restart: "no"

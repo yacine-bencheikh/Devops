@@ -234,9 +234,15 @@ jobs:
           kubectl rollout status deployment/frontend -n auraweb-prod --timeout=120s
           kubectl rollout status deployment/user-auth -n auraweb-prod --timeout=120s
 
+      - name: Start port-forward for user-auth metrics
+        run: |
+          pkill -f "kubectl port-forward svc/user-auth" || true
+          nohup kubectl port-forward svc/user-auth 30300:3000 \
+            -n auraweb-prod --address 0.0.0.0 \
+            > /tmp/pf-user-auth.log 2>&1 &
+          sleep 4
+
       - name: Deploy AI SOC addon
         run: |
-          export USER_AUTH_URL="http://192.168.145.140:30300"
-          export METRICS_URL="http://192.168.145.140:30300/metrics"
           cd $GITHUB_WORKSPACE/ai-soc-addon/ai-soc-addon/ai-soc-addon
           docker compose -f docker-compose.ai-soc.yml up -d --build --force-recreate
