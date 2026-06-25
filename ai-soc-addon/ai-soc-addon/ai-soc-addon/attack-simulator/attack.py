@@ -1,36 +1,68 @@
-"""
-Simulateur d'attaque brute-force sur /api/auth/login.
-Attend un délai (le temps que le modèle IA apprenne le trafic normal),
-puis envoie une rafale de tentatives de connexion échouées pour
-déclencher une anomalie détectable.
-"""
+import os
 import time
+import random
 import requests
 
-import os
 USER_AUTH_URL = os.environ.get("USER_AUTH_URL", "http://user-auth:3000")
+WAIT_BEFORE_ATTACK = int(os.environ.get("WAIT_BEFORE_ATTACK", "60"))
 
-# Temps d'attente avant de lancer l'attaque (en secondes).
-# Doit être > (WARMUP_SAMPLES * SCRAPE_INTERVAL_SECONDS) du détecteur
-# pour laisser le modèle finir son apprentissage. Par défaut 20*5=100s.
-WAIT_BEFORE_ATTACK = 60
+TARGET_ACCOUNTS = [
+    "admin@auraweb.com",
+    "yassine@auraweb.com",
+    "contact@auraweb.com",
+    "support@auraweb.com",
+    "root@auraweb.com",
+    "user@auraweb.com",
+]
 
-print(f"[attack-simulator] En attente {WAIT_BEFORE_ATTACK}s avant de lancer l'attaque...")
+PASSWORD_LIST = [
+    "123456", "password", "admin", "letmein", "welcome",
+    "qwerty", "abc123", "iloveyou", "1234567890", "admin123",
+    "pass123", "azerty", "000000", "password1", "test1234",
+]
+
+LOGIN_URL = f"{USER_AUTH_URL}/api/auth/login"
+
+print(f"[attack-simulator] Target  : {LOGIN_URL}")
+print(f"[attack-simulator] Accounts: {len(TARGET_ACCOUNTS)}")
+print(f"[attack-simulator] Waiting {WAIT_BEFORE_ATTACK}s for model to train before attack...")
 time.sleep(WAIT_BEFORE_ATTACK)
 
-print("[attack-simulator] 🚨 Lancement de l'attaque brute-force sur /api/auth/login")
+print(f"[attack-simulator] ========================================")
+print(f"[attack-simulator] LAUNCHING BRUTE-FORCE ATTACK")
+print(f"[attack-simulator] ========================================")
+
+hits = 0
+fails = 0
 
 for i in range(300):
+    email = TARGET_ACCOUNTS[i % len(TARGET_ACCOUNTS)]
+    password = PASSWORD_LIST[i % len(PASSWORD_LIST)] if i < 150 else f"guess_{i}"
+
     try:
-        requests.post(
-            f"{USER_AUTH_URL}/api/auth/login",
-            json={"email": "admin@auraweb.com", "password": f"guess{i}"},
+        resp = requests.post(
+            LOGIN_URL,
+            json={"email": email, "password": password},
             timeout=2,
         )
+        status = resp.status_code
+        icon = "✅ SUCCESS" if status == 200 else "❌ FAILED "
+        print(f"[attack-simulator] {icon}  [{i+1:03d}/300]  {email:<30}  pwd: {password:<15}  → HTTP {status}")
+        if status == 200:
+            hits += 1
+        else:
+            fails += 1
     except Exception as e:
-        print(f"[attack-simulator] erreur requête: {e}")
-    time.sleep(0.02)  # rafale rapide : ~50 req/sec, concentrée sur peu de fenêtres
+        print(f"[attack-simulator] ⚠️  TIMEOUT  [{i+1:03d}/300]  {email:<30}  pwd: {password:<15}  → {e}")
+        fails += 1
 
-print("[attack-simulator] Attaque terminée. Le conteneur reste actif sans rien faire.")
+    time.sleep(0.02)  # ~50 req/sec — enough to spike the 5-second scrape window
+
+print(f"[attack-simulator] ========================================")
+print(f"[attack-simulator] ATTACK COMPLETE")
+print(f"[attack-simulator] ✅ Successful logins : {hits}")
+print(f"[attack-simulator] ❌ Failed attempts   : {fails}")
+print(f"[attack-simulator] ========================================")
+print(f"[attack-simulator] Container staying alive — run 'docker logs attack-simulator' to review")
 while True:
     time.sleep(3600)
