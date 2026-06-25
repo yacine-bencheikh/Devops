@@ -14,10 +14,10 @@ commonLabels:
 images:
 - name: yassine09/lab-auth
   newName: yassine09/lab-auth
-  newTag: a613e1f70a390db760c314b78cfd97fd0098c751
+  newTag: 96b889341a2f39f9d01fc0d1b7045cc65161ec65
 - name: yassine09/lab-frontend
   newName: yassine09/lab-frontend
-  newTag: a613e1f70a390db760c314b78cfd97fd0098c751
+  newTag: 96b889341a2f39f9d01fc0d1b7045cc65161ec65
 
 patches:
 - patch: |-
