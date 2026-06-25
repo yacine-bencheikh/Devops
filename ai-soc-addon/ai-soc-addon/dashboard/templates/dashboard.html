@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+  <div class="topbar">
+    <div>
+      <h1>Vue d'ensemble — Surveillance temps réel</h1>
+      <div class="sub">SERVICE: user-auth (login) · MOTEUR: Isolation Forest + règle hybride</div>
+    </div>
+    {% if model_ready %}
+      <span class="badge ok"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> MODÈLE ACTIF</span>
+    {% else %}
+      <span class="badge warn"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg> APPRENTISSAGE...</span>
+    {% endif %}
+  </div>
+
+  <div class="grid-kpi">
+    <div class="card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <div class="kpi-label">Requêtes / fenêtre (5s)</div>
+      <div class="kpi-value">{{ last.total if last else '-' }}</div>
+    </div>
+    <div class="card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <div class="kpi-label">Échecs login (401)</div>
+      <div class="kpi-value {{ 'red' if last and last.errors_401 and last.errors_401 > 5 else '' }}">{{ last.errors_401 if last else '-' }}</div>
+    </div>
+    <div class="card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div class="kpi-label">Anomalies détectées (total)</div>
+      <div class="kpi-value {{ 'red' if anomaly_count > 0 else 'green' }}">{{ anomaly_count }}</div>
+    </div>
+    <div class="card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+      <div class="kpi-label">Statut sécurité</div>
+      <div class="kpi-value {{ 'red' if last and last.is_anomaly else 'green' }}">
+        {{ 'SOUS ATTAQUE' if last and last.is_anomaly else 'NORMAL' }}
+      </div>
+    </div>
+  </div>
+
+  {% if last_alert %}
+  <div class="panel" style="border-color:var(--red);">
+    <h2 style="color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--red);"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg> {{ last_alert.threat.type if last_alert.threat else 'ALERTE' }} — {{ last_alert.time }}</h2>
+    <div style="color:var(--text-dim);font-size:13.5px;margin-bottom:12px;" class="mono">{{ last_alert.threat.description if last_alert.threat else last_alert.message }}</div>
+    {% if last_alert.threat %}
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:14px;border-top:1px solid var(--border);padding-top:12px;">
+      <div>
+        <div style="color:var(--text-dim);font-size:11px;text-transform:uppercase;margin-bottom:4px;">Source identifiée</div>
+        <div class="mono" style="font-size:12.5px;color:var(--amber);">{{ last_alert.threat.source_ip }}</div>
+      </div>
+      <div>
+        <div style="color:var(--text-dim);font-size:11px;text-transform:uppercase;margin-bottom:4px;">🛡️ Contre-mesure (simulée)</div>
+        <div class="mono" style="font-size:12.5px;color:var(--green);">{{ last_alert.threat.countermeasure }}</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="row-2">
+    <div class="panel">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8 14 12.7l-3-3L7 13.6"/></svg> Volume de requêtes vs échecs de login</h2>
+      <canvas id="trafficChart" height="110"></canvas>
+    </div>
+    <div class="panel">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Score d'anomalie (IA)</h2>
+      <canvas id="scoreChart" height="110"></canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg> Journal des événements récents</h2>
+    <table>
+      <tr><th>Heure</th><th>Requêtes</th><th>Échecs 401</th><th>Ratio erreur</th><th>Score IA</th><th>Type</th><th>Statut</th></tr>
+      {% for row in history %}
+      <tr class="{{ 'anomaly' if row.is_anomaly else '' }}">
+        <td>{{ row.time }}</td>
+        <td>{{ row.total }}</td>
+        <td>{{ row.errors_401 }}</td>
+        <td>{{ '%.0f'|format(row.error_ratio*100) }}%</td>
+        <td>{{ row.score }}</td>
+        <td style="font-size:11.5px;">{{ row.threat.type if row.threat else '-' }}</td>
+        <td>
+          {% if row.is_anomaly %}<span class="tag alert">ANOMALIE</span>
+          {% else %}<span class="tag normal">normal</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+<script>
+const history = {{ history_json|safe }};
+const labels = history.map(h => h.time).reverse();
+const totals = history.map(h => h.total).reverse();
+const errors = history.map(h => h.errors_401).reverse();
+const scores = history.map(h => h.score).reverse();
+const anomalyPoints = history.map(h => h.is_anomaly).reverse();
+
+const commonOpts = {
+  responsive:true,
+  plugins:{legend:{labels:{color:'#8b93a3'}}},
+  scales:{
+    x:{ticks:{color:'#9b8a8c',maxTicksLimit:8}, grid:{color:'#2c1a1d'}},
+    y:{ticks:{color:'#9b8a8c'}, grid:{color:'#2c1a1d'}}
+  }
+};
+
+new Chart(document.getElementById('trafficChart'), {
+  type:'line',
+  data:{labels, datasets:[
+    {label:'Requêtes totales', data:totals, borderColor:'#ffb020', backgroundColor:'rgba(255,176,32,.08)', tension:.3, fill:true},
+    {label:'Échecs login (401)', data:errors, borderColor:'#ff3b4e', backgroundColor:'rgba(255,59,78,.12)', tension:.3, fill:true},
+  ]},
+  options: commonOpts
+});
+
+new Chart(document.getElementById('scoreChart'), {
+  type:'line',
+  data:{labels, datasets:[
+    {label:'Score IA (négatif = suspect)', data:scores,
+     borderColor: '#ff3b4e',
+     pointBackgroundColor: anomalyPoints.map(a => a ? '#ff3b4e' : '#9b8a8c'),
+     pointRadius: anomalyPoints.map(a => a ? 5 : 2),
+     tension:.3}
+  ]},
+  options: commonOpts
+});
+
+// auto-refresh
+setTimeout(() => location.reload(), 7000);
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="topbar">
+    <div>
+      <h1>Historique des alertes</h1>
+      <div class="sub">CLASSIFICATION AUTOMATIQUE DES MENACES PAR L'IA + RÈGLES</div>
+    </div>
+    <span class="badge {{ 'crit' if alerts|length > 0 else 'ok' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      {{ alerts|length }} ALERTE(S)
+    </span>
+  </div>
+
+  {% if alerts|length == 0 %}
+  <div class="panel">
+    <div style="color:var(--text-dim);text-align:center;padding:50px 0;font-family:'JetBrains Mono',monospace;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" width="40" height="40" style="stroke:var(--green);margin-bottom:14px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      <div>Aucune anomalie détectée pour le moment.</div>
+      <div>Le système surveille en continu.</div>
+    </div>
+  </div>
+  {% else %}
+  {% for row in alerts %}
+  <div class="panel" style="border-color:var(--red);margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div>
+        <span class="tag alert" style="font-size:12.5px;">{{ row.threat.severity if row.threat else 'INCONNUE' }}</span>
+        <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:17px;margin-left:10px;">
+          {{ row.threat.type if row.threat else 'Anomalie' }}
+        </span>
+      </div>
+      <span class="mono" style="color:var(--text-dim);font-size:12.5px;">{{ row.time }}</span>
+    </div>
+
+    <div class="mono" style="font-size:13px;color:var(--text-dim);margin-bottom:12px;line-height:1.6;">
+      {{ row.threat.description if row.threat else '' }}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:12px;font-size:12.5px;">
+      <div><span style="color:var(--text-dim);">REQUÊTES</span><br><span class="mono">{{ row.total }}</span></div>
+      <div><span style="color:var(--text-dim);">ÉCHECS 401</span><br><span class="mono">{{ row.errors_401 }}</span></div>
+      <div><span style="color:var(--text-dim);">DIVERSITÉ ROUTES</span><br><span class="mono">{{ row.route_diversity }}</span></div>
+      <div><span style="color:var(--text-dim);">SCORE IA</span><br><span class="mono">{{ row.score }}</span></div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:12px;display:grid;grid-template-columns:1fr 1.4fr;gap:14px;">
+      <div>
+        <div style="color:var(--text-dim);font-size:11px;text-transform:uppercase;margin-bottom:4px;">Source identifiée</div>
+        <div class="mono" style="font-size:12.5px;color:var(--amber);">{{ row.threat.source_ip if row.threat else '-' }}</div>
+      </div>
+      <div>
+        <div style="color:var(--text-dim);font-size:11px;text-transform:uppercase;margin-bottom:4px;">🛡️ Contre-mesure (simulée)</div>
+        <div class="mono" style="font-size:12.5px;color:var(--green);">{{ row.threat.countermeasure if row.threat else '-' }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+{% endblock %}

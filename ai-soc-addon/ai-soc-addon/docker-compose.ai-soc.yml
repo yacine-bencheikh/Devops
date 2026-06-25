@@ -1,0 +1,36 @@
+# ==========================================
+# Add-on : Mini SOC avec détection d'anomalies par IA (v3 - dashboard complet)
+# Usage (depuis la racine du projet Devops-main, à côté de docker-compose.yml) :
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.ai-soc.yml up -d --build
+#
+# Dashboard accessible sur : http://localhost:8500  (login: admin / admin)
+# ==========================================
+
+services:
+  ai-anomaly-detector:
+    build: ./ai-soc-addon/dashboard
+    container_name: ai-anomaly-detector
+    ports:
+      - "8500:8500"
+    environment:
+      - ADMIN_USER=admin
+      - ADMIN_PASS=admin
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    depends_on:
+      - user-auth
+    restart: unless-stopped
+
+  traffic-generator:
+    build: ./ai-soc-addon/traffic-generator
+    container_name: traffic-generator
+    depends_on:
+      - user-auth
+    restart: unless-stopped
+
+  attack-simulator:
+    build: ./ai-soc-addon/attack-simulator
+    container_name: attack-simulator
+    depends_on:
+      - user-auth
+    restart: "no"

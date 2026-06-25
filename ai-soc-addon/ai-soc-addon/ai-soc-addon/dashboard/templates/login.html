@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion — AuraSOC</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="brand">
+        <span class="pulse-wrap"><span class="ring"></span><span class="dot"></span></span>
+        AuraSOC
+      </div>
+      {% if error %}<div class="error-msg">⚠ {{ error }}</div>{% endif %}
+      <form method="POST">
+        <input type="text" name="username" placeholder="Identifiant" autofocus required>
+        <input type="password" name="password" placeholder="Mot de passe" required>
+        <button type="submit">Se connecter</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

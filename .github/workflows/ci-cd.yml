@@ -233,3 +233,11 @@ jobs:
         run: |
           kubectl rollout status deployment/frontend -n auraweb-prod --timeout=120s
           kubectl rollout status deployment/user-auth -n auraweb-prod --timeout=120s
+
+      - name: Deploy AI SOC addon
+        run: |
+          USER_AUTH_PORT=$(kubectl get svc user-auth -n auraweb-prod -o jsonpath='{.spec.ports[0].nodePort}')
+          export USER_AUTH_URL="http://192.168.145.140:${USER_AUTH_PORT}"
+          export METRICS_URL="http://192.168.145.140:${USER_AUTH_PORT}/metrics"
+          cd $GITHUB_WORKSPACE/ai-soc-addon/ai-soc-addon/ai-soc-addon
+          docker compose -f docker-compose.ai-soc.yml up -d --build --force-recreate

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="topbar">
+    <div>
+      <h1>Historique des alertes</h1>
+      <div class="sub">TOUTES LES ANOMALIES DÉTECTÉES PAR LE MOTEUR IA + RÈGLES</div>
+    </div>
+    <span class="badge {{ 'crit' if alerts|length > 0 else 'ok' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      {{ alerts|length }} ALERTE(S)
+    </span>
+  </div>
+
+  <div class="panel">
+    {% if alerts|length == 0 %}
+      <div style="color:var(--text-dim);text-align:center;padding:50px 0;font-family:'JetBrains Mono',monospace;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" width="40" height="40" style="stroke:var(--green);margin-bottom:14px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <div>Aucune anomalie détectée pour le moment.</div>
+        <div>Le système surveille en continu.</div>
+      </div>
+    {% else %}
+    <table>
+      <tr><th>Heure</th><th>Requêtes</th><th>Échecs 401</th><th>Ratio erreur</th><th>Score IA</th><th>Sévérité</th></tr>
+      {% for row in alerts %}
+      <tr class="anomaly">
+        <td>{{ row.time }}</td>
+        <td>{{ row.total }}</td>
+        <td>{{ row.errors_401 }}</td>
+        <td>{{ '%.0f'|format(row.error_ratio*100) }}%</td>
+        <td>{{ row.score }}</td>
+        <td><span class="tag alert">{{ 'CRITIQUE' if row.error_ratio > 0.8 else 'ÉLEVÉE' }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </div>
+{% endblock %}
